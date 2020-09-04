@@ -22,7 +22,7 @@ Para instalar y correr exitosamente este proyecto necesitamos:
 Una vez compiladas las clases vamos a correr el proyecto
 
 ```console
-mvn exec:java -Dexec.mainClass="edu.escuelaing.arep.Cliente"
+mvn exec:java -Dexec.mainClass="edu.escuelaing.arep.Client"
 ```
 
 ## Construido con
