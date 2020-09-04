@@ -1,48 +1,55 @@
 package edu.escuelaing.arep;
 
-import edu.escuelaing.arep.httpserver.HttpServer;
-import edu.escuelaing.arep.services.MateriasServices;
-import static edu.escuelaing.arep.webfram.WebFramework.setHomeFolder;
-import static edu.escuelaing.arep.webfram.WebFramework.get;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import edu.escuelaing.arep.utilities.Sorts;
+import edu.escuelaing.arep.webfram.WebFramework;
+import spark.Request;
+import spark.Response;
+import static spark.Spark.*;
 import static edu.escuelaing.arep.webfram.WebFramework.getPlain;
 import static edu.escuelaing.arep.webfram.WebFramework.getImage;
-import java.io.IOException;
-
 public class Main {
 
-    private static MateriasServices service = new MateriasServices();
-
-    public static void main(String[] args){
-        setHomeFolder("src/main/webapp");
-        HttpServer.setPort(getPort());
+    public static void main(String[] args) {
+        setPort(getPort());
+        staticFileLocation("/public");
         setFiles();
-        setImages();
-        try {
-            HttpServer.start();
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
+
     }
 
     /**
      * Configura todas las rutas a los archivos de texto plano, mapenado con rutas de acceso
      */
     private static void setFiles(){
-        get("/", (path, params) -> getDBData());
-        get("/data.html", (path, params) -> getPlain(path, params));
-        get("/css/style.css", (path, params) -> getPlain(path, params));
-        get("/css/styledb.css", (path, params) -> getPlain(path, params));
-        get("/results", (path, params) -> getPlain("/results.html", params));
-        get("/js/box.js", (path, params) -> getPlain(path, params));
+        get("/", (req, resp)->{
+            resp.redirect("index.html");
+            return null;
+        });
+        post("/result", (req, resp)-> {
+            resp.status(200);
+            resp.type("application/json");
+            String[] values=req.body().split(",");
+            ArrayList<Integer> list= new ArrayList<Integer>();
+            for (String i:values) {
+                list.add(Integer.parseInt(i));
+            }
+            Sorts.bubbleSort(list);
+            return "{ lista: "+list +  "}";
+        });
     }
 
-    /**
-     * Configura todas la imagenes, mapeando con rutas de acceso
-     */
-    private static void setImages(){
-        getImage("/images/prueba.png", (path) -> getImage(path));
-        getImage("/favicon.ico", (path) -> getImage(path));
-        getImage("/images/img-portada.jpeg", (path) -> getImage(path));
+    public static String processList(Request res, Response resp){
+        System.out.println(res.queryParams("YYAAA"));
+        System.out.println(res.queryParams("text"));
+        System.out.println(res.body());
+        String[] lista= res.queryParams("text").split("\\%");
+        System.out.println(Arrays.toString(lista));
+        System.out.println("prueba");
+        return "prueba";
     }
 
     /**
@@ -53,15 +60,7 @@ public class Main {
         if (System.getenv("PORT") != null) {
             return Integer.parseInt(System.getenv("PORT"));
         }
-        return 36000; //returns default port if heroku-port isn't set (i.e. on localhost)
+        return 4567; //returns default port if heroku-port isn't set (i.e. on localhost)
     }
 
-    /**
-     * Retorna un archivo HTML configurado y mapeado con una ruta fija a un HTML
-     * @return HTML con tablas e informacion de las materias en la base de datos
-     */
-    public static String getDBData(){
-        String a = getPlain("/database.html", null);
-        return a.replace("reemplazo", service.getMateriasHTML());
-    }
 }
